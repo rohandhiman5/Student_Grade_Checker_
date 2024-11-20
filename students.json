@@ -1,0 +1,21 @@
+[
+    {
+        "roll_no": "230001069",
+        "name": "ROHAN",
+        "branch": "CSE",
+        "cgpa": 6.7,
+        "courses": {
+            "CS253": 67
+        }
+    },
+    {
+        "roll_no": "1002",
+        "name": "abhash",
+        "branch": "CSE",
+        "cgpa": 7.7,
+        "courses": {
+            "CS201": 66,
+            "CS209": 88
+        }
+    }
+]
