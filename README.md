@@ -18,15 +18,14 @@ This project was made by:
 
 1. [Project Overview](#project-overview)
 2. [Folder Structure](#folder-structure)
-3. [Approach](#approach)
-4. [Instructions to Use](#instructions-to-use)
+3. [Instructions to Use](#instructions-to-use)
    - [Prerequisites](#prerequisites)
    - [CLI Setup](#cli-setup)
    - [GUI Setup](#gui-setup)
-5. [Data Structures and Algorithms Used](#data-structures-and-algorithms-used)
+4. [Data Structures and Algorithms Used](#data-structures-and-algorithms-used)
    - [Data Structures](#data-structures)
    - [Algorithms](#algorithms)
-6. [References](#references)
+5. [References](#references)
 
 ## Project Overview
 The system is built with an object-oriented approach in C++. It mainly focuses on data handling, input validation, and user interaction. The system utilizes a class-based design to manage student details and calculate CGPA based on marks and credits of courses provided to them. It uses various algorithms in an efficient way to perform these tasks. Data is stored in _binary files_ for efficient persistence with additional support of _sorting_, _searching_, and _updating_ records.
@@ -50,10 +49,6 @@ For user interaction, **Tkinter** is used to create a graphical user interface (
     │        
     └── README.md                   # Project documentation
 
-## Approach
-The system is built with an object-oriented approach in C++. It mainly focuses on data handling, input validation, and user interaction. The system utilizes a class-based design to manage student details and calculate CGPA based on marks and credits of courses provided to them. It uses various algorithms in an efficient way to perform these tasks. Data is stored in _binary files_ for efficient persistence with additional support of _sorting_, _searching_, and _updating_ records.
-
-For user interaction, **Tkinter** is used to create a graphical user interface (GUI) to make it easier for users to interact with the system.
 
 ## Instructions to Use
 
