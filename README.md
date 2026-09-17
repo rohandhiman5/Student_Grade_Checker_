@@ -1,6 +1,6 @@
 # Student Grade Management System
 
-This project is a Student Grade Checker program that allows users to manage student records in a menu-driven CLI interface and GUI interface. The program stores student data in a file, allowing for efficient storage. It supports various operations such as _adding new student_, _removing existing student_, _updating students details_, and _searching records_ efficiently using **binary** and **linear search** algorithms. It also calculates student CGPA based on the course policies.
+This project is a Student Grade Checker program that allows users to manage student records in a menu-driven CLI interface and GUI interface. The program stores student data in a file, allowing for efficient storage. It supports various operations such as _adding new student_, _removing existing student_, _updating students details_, and _searching records_ efficiently using a custom **B-Tree Data Structure**. It also calculates student CGPA based on the course policies.
 
 This project implements Student grade managements system with two interfaces:
 - **CLI (Command Line Interface)** using C++ for efficient data handling.
@@ -40,6 +40,7 @@ For user interaction, **Tkinter** is used to create a graphical user interface (
     │   ├── main.cpp                # Main driver program for CLI
     │   ├── student.cpp             # Implementation of the student class
     │   ├── student.hpp             # Header file for the student class
+    │   ├── btree.hpp               # Custom B-Tree data structure implementation
     │   ├── students.dat            # Serialized data file for student records
     │   ├── Program.exe             # Compiled CLI executable
     │
@@ -110,23 +111,18 @@ python Student_Grade_checker_GUI.py
 
 ## Data stuctures and Algorithms used:
 ### Data Structures
-  1. Vector `` (std::vector) `` : Stores the list of students.
-  Provides dynamic resizing and sequential access to student records.
-  2. Multimap `` (std::multimap) ``
-  Indexes students by their names, allowing efficient searches for multiple students with the same name. Enables range-based queries.
-  3. File I/O
-  Uses .dat and .json files for saving and loading student records efficiently. Ensures data is retained across program sessions.
-  4. Custom Classes
+  1. **B-Tree (B-Tree Data Structure)**: 
+  The core of the CLI application. Replaced traditional vectors and multimaps. The B-Tree acts as the primary index (keyed by Roll Number) allowing for instantaneous `O(log N)` insertions, deletions, and lookups, significantly improving the scalability of the application.
+  2. **File I/O**:
+  Uses .dat and .json files for saving and loading student records efficiently. The B-Tree is serialized and deserialized into these binary files ensuring data is retained across program sessions.
+  3. **Custom Classes**:
   `` student Class ``: Encapsulates attributes like name, roll number, branch, grades, and CGPA with methods for data input (getdata), output (showdata), and CGPA calculation.
-  Additional helper functions for:
-  - File operations (loadAllStudentsFromFile, saveAllStudentsToFile).
-  - Searching (binarySearchByRollNo).
-  - Sorting (mergeByName, mergeByCGPA)
+  `` BTree and BTreeNode ``: Generic template classes that handle the complex node splitting, traversal, and dynamic tree balancing.
+
 ### Algorithms:
-  1. **hashing**: Hashing is used for efficient lookups for course information and marks .
-  2. **Linear Search**:- To search student details with the help of linear search on the basis of Branch.
-  3. **Binary search**:- To search student details with the help of Binary search on the basis of Roll number.
-  4. **Merge sort**:-Merge sort was used here so that we can use binary search to search on the basis of roll number and for CGPA to sort students on basis of their CGPA.
+  1. **hashing**: Hashing is used for efficient lookups for course information and marks using `unordered_map`.
+  2. **B-Tree Search**: To rapidly search student details `O(log N)` by traversing the self-balancing nodes.
+  3. **In-Order Tree Traversal**: Used to natively sort students by Roll Number without requiring any external sorting algorithms like Merge Sort.
 
 
 
