@@ -60,7 +60,7 @@ void displayAllCourses()
 
 
 // Function to store the list of the student in the student.dat file for file handling
-void saveAllStudentsToFile(const vector<student>& students, const char* filename)
+void saveAllStudentsToFile(BTree<long long, student> &rollTree, const char *filename)
 {
     ofstream file(filename, ios::out | ios::binary);
     if (!file)
@@ -68,6 +68,9 @@ void saveAllStudentsToFile(const vector<student>& students, const char* filename
         cout << "Error opening file for writing.\n";
         return;
     }
+
+    vector<student> students;
+    rollTree.traverse(students);
 
     int numStudents = students.size();
     file.write(reinterpret_cast<const char*>(&numStudents), sizeof(numStudents));
@@ -113,7 +116,7 @@ void saveAllStudentsToFile(const vector<student>& students, const char* filename
 }
 
 // Function to load the list of the student already stored in the file 
-void loadAllStudentsFromFile(vector<student>& students, const char* filename, multimap<string, student>& ByName)
+void loadAllStudentsFromFile(BTree<long long, student> &rollTree, const char *filename)
 {
     ifstream file(filename, ios::in | ios::binary);
     if (!file)
@@ -174,20 +177,14 @@ void loadAllStudentsFromFile(vector<student>& students, const char* filename, mu
 
         file.read(reinterpret_cast<char*>(&s.CGPA), sizeof(s.CGPA));
 
-        students.push_back(s);
-    }
-
-    ByName.clear();
-    for (const auto& s : students)
-    {
-        ByName.insert({s.name, s});
+        rollTree.insert(s.Roll_no, s);
     }
 
     file.close();
 }
 
 // Function to Get the data about the student 
-void student::getdata(const vector<student> &existingStudents)
+void student::getdata(BTree<long long, student> &rollTree)
 {
     cin.ignore(); 
     cout << "\t* ENTER STUDENT NAME: ";
@@ -210,14 +207,10 @@ void student::getdata(const vector<student> &existingStudents)
 
   
         bool duplicateRollNo = false;
-        for (const auto &existingStudent : existingStudents)
+        if (rollTree.search(Roll_no) != nullptr)
         {
-            if (existingStudent.Roll_no == Roll_no)
-            {
-                cout << "Roll number already exists! Please enter a unique Roll No: ";
-                duplicateRollNo = true;
-                break;
-            }
+            cout << "Roll number already exists! Please enter a unique Roll No: ";
+            duplicateRollNo = true;
         }
 
         if (!duplicateRollNo)
@@ -300,12 +293,22 @@ void student::Enter_courses(int n)
     while (n--)
     {
         string courseID;
-        cout << "Enter the Course ID: ";
+        cout << "Enter the Course ID (type 'list' to see courses, 'cancel' to stop): ";
         getline(cin, courseID); 
 
-        if (Temp.find(courseID) == Temp.end())
+        if (courseID == "cancel" || courseID == "exit")
         {
-            cout << "Course not found! Try again.\n";
+            cout << "Course entry cancelled.\n";
+            break;
+        }
+        else if (courseID == "list")
+        {
+            displayAllCourses();
+            ++n; // don't count this iteration
+        }
+        else if (Temp.find(courseID) == Temp.end())
+        {
+            cout << "Course not found! Try again or type 'list' to see available courses.\n";
             ++n; 
         }
         else if (find(registeredCourses.begin(), registeredCourses.end(), courseID) != registeredCourses.end())
@@ -367,275 +370,65 @@ double student::calculateCGPA()
 }
 
 // Function to update the student recods.
-void updateStudentRecord(vector<student> &students, long long rollNo)
-
+void updateStudentRecord(BTree<long long, student> &rollTree, long long rollNo)
 {
-    bool found = false;
-
-    for (auto &s : students)
+    student* s = rollTree.search(rollNo);
+    if (s != nullptr)
     {
-        if (s.Roll_no == rollNo)
+        cout << "\nStudent Found. Current Details:\n";
+        s->showdata();
+
+        cout << "\nEnter New Details (Leave blank to keep existing values):\n";
+
+        cin.ignore();
+        cout << "New Name (current: " << s->name << "): ";
+        string newName;
+        getline(cin, newName);
+        if (!newName.empty())
         {
-            found = true;
-
-            cout << "\nStudent Found. Current Details:\n";
-            s.showdata();
-
-            cout << "\nEnter New Details (Leave blank to keep existing values):\n";
-
-            cin.ignore();
-            cout << "New Name (current: " << s.name << "): ";
-            string newName;
-            getline(cin, newName);
-            if (!newName.empty())
-            {
-                s.name = newName;
-            }
-
-          
-            cout << "New Age (current: " << s.age << "): ";
-            string newAgeStr;
-            getline(cin, newAgeStr);
-            if (!newAgeStr.empty())
-            {
-                s.age = stoi(newAgeStr);
-            }
-
-
-            cout << "New Branch (current: " << s.Branch << "): ";
-            string newBranch;
-            getline(cin, newBranch);
-            if (!newBranch.empty())
-            {
-                s.Branch = newBranch;
-            }
-
-    
-            cout << "Do you want to update courses? (yes/no): ";
-            string updateCourses;
-            cin >> updateCourses;
-
-            if (updateCourses == "yes")
-            {
-                cout << "Enter the new total number of courses: ";
-                int newTotalCourses;
-                cin >> newTotalCourses;
-
-                s.registeredCourses.clear();
-                s.marks_map.clear();
-                s.Enter_courses(newTotalCourses);
-            }
-
-        
-            s.CGPA = s.calculateCGPA();
-
-            cout << "\nStudent Record Updated Successfully!\n";
-            break;
+            s->name = newName;
         }
-    }
 
-    if (!found)
+      
+        cout << "New Age (current: " << s->age << "): ";
+        string newAgeStr;
+        getline(cin, newAgeStr);
+        if (!newAgeStr.empty())
+        {
+            s->age = stoi(newAgeStr);
+        }
+
+
+        cout << "New Branch (current: " << s->Branch << "): ";
+        string newBranch;
+        getline(cin, newBranch);
+        if (!newBranch.empty())
+        {
+            s->Branch = newBranch;
+        }
+
+        cout << "Do you want to update courses? (yes/no): ";
+        string updateCourses;
+        cin >> updateCourses;
+
+        if (updateCourses == "yes")
+        {
+            cout << "Enter the new total number of courses: ";
+            int newTotalCourses;
+            cin >> newTotalCourses;
+
+            s->registeredCourses.clear();
+            s->marks_map.clear();
+            s->Enter_courses(newTotalCourses);
+        }
+    
+        s->CGPA = s->calculateCGPA();
+
+        cout << "\nStudent Record Updated Successfully!\n";
+    }
+    else
     {
         cout << "Student with Roll No " << rollNo << " not found.\n";
-    }
-}
-
-// Implemented linear search to look up the studnet by the branch
-int linearSearchByBranch(const vector<student> &students, const string &targetBranch)
-{
-    for (int i = 0; i < students.size(); ++i)
-    {
-        if (students[i].Branch == targetBranch)
-        {
-            return i;
-        }
-    }
-    return -1;
-}
-
-// Implemented Binary search to look up the Student by Roll Number
-int binarySearchByRollNo(const vector<student> &students, int targetRollNo)
-{
-    int left = 0, right = students.size() - 1;
-
-    while (left <= right)
-    {
-        int mid = left + (right - left) / 2;
-
-       
-        if (students[mid].Roll_no == targetRollNo)
-        {
-            return mid;
-        }
-       
-        else if (students[mid].Roll_no < targetRollNo)
-        {
-            left = mid + 1;
-        }
-      
-        else
-        {
-            right = mid - 1;
-        }
-    }
-
-    return -1; // Not found
-}
-
-// Implemented merge sort to Sort the Student based on ROll number 
-void mergeByRollNo(vector<student> &students, int left, int right)
-{
-    if (left >= right)
-        return;
-
-    int mid = left + (right - left) / 2;
-
-    
-    mergeByRollNo(students, left, mid);
-
-  
-    mergeByRollNo(students, mid + 1, right);
-
-    
-    vector<student> temp;
-    int i = left, j = mid + 1;
-
-    while (i <= mid && j <= right)
-    {
-        if (students[i].Roll_no <= students[j].Roll_no)
-        {
-            temp.push_back(students[i]);
-            i++;
-        }
-        else
-        {
-            temp.push_back(students[j]);
-            j++;
-        }
-    }
-
-   
-    while (i <= mid)
-    {
-        temp.push_back(students[i]);
-        i++;
-    }
-
-  
-    while (j <= right)
-    {
-        temp.push_back(students[j]);
-        j++;
-    }
-
-    for (int k = left; k <= right; ++k)
-    {
-        students[k] = temp[k - left];
-    }
-}
-
-// implemented merge sort to sort the student based on CGPA
-void mergeByCGPA(vector<student> &students, int left, int right)
-{
-    if (left >= right)
-        return;
-
-    int mid = left + (right - left) / 2;
-
-   
-    mergeByCGPA(students, left, mid);
-
-    
-    mergeByCGPA(students, mid + 1, right);
-
-    
-    vector<student> temp;
-    int i = left, j = mid + 1;
-
-    while (i <= mid && j <= right)
-    {
-        if (students[i].CGPA <= students[j].CGPA)
-        {
-            temp.push_back(students[i]);
-            i++;
-        }
-        else
-        {
-            temp.push_back(students[j]);
-            j++;
-        }
-    }
-
-    
-    while (i <= mid)
-    {
-        temp.push_back(students[i]);
-        i++;
-    }
-
-   
-    while (j <= right)
-    {
-        temp.push_back(students[j]);
-        j++;
-    }
-
-   
-    for (int k = left; k <= right; ++k)
-    {
-        students[k] = temp[k - left];
-    }
-}
-
-// Implemented merge sort to sort the student based on Names
-void mergeByName(vector<student> &students, int left, int right)
-{
-    if (left >= right)
-        return;
-
-    int mid = left + (right - left) / 2;
-
-    
-    mergeByName(students, left, mid);
-
-    mergeByName(students, mid + 1, right);
-
-    
-    vector<student> temp;
-    int i = left, j = mid + 1;
-
-    while (i <= mid && j <= right)
-    {
-        if (students[i].name <= students[j].name)
-        {
-            temp.push_back(students[i]);
-            i++;
-        }
-        else
-        {
-            temp.push_back(students[j]);
-            j++;
-        }
-    }
-
-    
-    while (i <= mid)
-    {
-        temp.push_back(students[i]);
-        i++;
-    }
-
-    
-    while (j <= right)
-    {
-        temp.push_back(students[j]);
-        j++;
-    }
-
-   
-    for (int k = left; k <= right; ++k)
-    {
-        students[k] = temp[k - left];
     }
 }
 

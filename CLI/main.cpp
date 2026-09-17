@@ -1,20 +1,15 @@
 #include "student.hpp"
+#include <algorithm>
 
 using namespace std;
 
 int main()
 {
-    multimap<string, student> ByName;
     cout << "working";
     int choice;
-    vector<student> students;
+    BTree<long long, student> rollTree; // Using B-Tree instead of vector
 
-    loadAllStudentsFromFile(students, "students.dat", ByName);
-    cout << "ByName size: " << ByName.size() << endl;
-    for (const auto &entry : ByName)
-    {
-        cout << "Name: " << entry.first << ", Roll No: " << entry.second.Roll_no << endl;
-    }
+    loadAllStudentsFromFile(rollTree, "students.dat");
 
     while (true)
     {
@@ -46,17 +41,18 @@ int main()
         case 1:
         {
             student newStudent;
-            newStudent.getdata(students);
+            newStudent.getdata(rollTree);
             newStudent.CGPA = newStudent.calculateCGPA();
-            students.push_back(newStudent);
+            rollTree.insert(newStudent.Roll_no, newStudent);
             cout << "\nStudent Record Inserted Successfully!\n";
             break;
         }
         case 2:
         {
-
-            cout << "\nAll Student Records\n";
-            for (const auto &s : students)
+            vector<student> all;
+            rollTree.traverse(all);
+            cout << "\nAll Student Records (Sorted by Roll No via B-Tree)\n";
+            for (const auto &s : all)
             {
                 s.showdata();
                 cout << "\n--------------------------------------\n";
@@ -95,17 +91,12 @@ int main()
                     continue;
                 }
 
-                bool found = false;
-                for (const auto &s : students)
+                student* s = rollTree.search(rollNo);
+                if (s != nullptr)
                 {
-                    if (s.Roll_no == rollNo)
-                    {
-                        s.showdata();
-                        found = true;
-                        break;
-                    }
+                    s->showdata();
                 }
-                if (!found)
+                else
                 {
                     cout << "Student with Roll No " << rollNo << " not found.\n";
                 }
@@ -119,17 +110,17 @@ int main()
                 cin.ignore();
                 getline(cin, key);
 
-                auto range = ByName.equal_range(key);
-                if (range.first != range.second)
-                {
-                    cout << "\nStudent(s) Found:\n";
-                    for (auto it = range.first; it != range.second; ++it)
-                    {
-                        it->second.showdata();
+                vector<student> all;
+                rollTree.traverse(all);
+                bool found = false;
+                for (const auto& s : all) {
+                    if (s.name == key) {
+                        if (!found) cout << "\nStudent(s) Found:\n";
+                        s.showdata();
+                        found = true;
                     }
                 }
-                else
-                {
+                if (!found) {
                     cout << "Student with name \"" << key << "\" not found.\n";
                 }
                 break;
@@ -142,18 +133,17 @@ int main()
                 cin.ignore();
                 getline(cin, targetBranch);
 
+                vector<student> all;
+                rollTree.traverse(all);
                 bool found = false;
-                for (const auto &s : students)
-                {
-                    if (s.Branch == targetBranch)
-                    {
+                for (const auto& s : all) {
+                    if (s.Branch == targetBranch) {
                         s.showdata();
                         cout << "\n--------------------------------------\n";
                         found = true;
                     }
                 }
-                if (!found)
-                {
+                if (!found) {
                     cout << "\nNo students found in the \"" << targetBranch << "\" branch.\n";
                 }
                 break;
@@ -179,16 +169,17 @@ int main()
                 continue;
             }
 
-            auto it = remove_if(students.begin(), students.end(), [rollNo](const student &s)
-                                { return s.Roll_no == rollNo; });
-
-            if (it != students.end())
-            {
-                students.erase(it, students.end());
+            if (rollTree.search(rollNo) != nullptr) {
+                vector<student> all;
+                rollTree.traverse(all);
+                rollTree.clear(); // Clear existing tree
+                for (const auto& s : all) {
+                    if (s.Roll_no != rollNo) {
+                        rollTree.insert(s.Roll_no, s);
+                    }
+                }
                 cout << "Student with Roll No " << rollNo << " deleted.\n";
-            }
-            else
-            {
+            } else {
                 cout << "Student with Roll No " << rollNo << " not found.\n";
             }
             break;
@@ -207,20 +198,17 @@ int main()
                 continue;
             }
 
-            updateStudentRecord(students, rollNo);
+            updateStudentRecord(rollTree, rollNo);
             break;
         }
 
         case 6:
         {
             vector<student> temp;
-
-            for (int i = 0; i < students.size(); i++)
-            {
-                temp.push_back(students[i]);
-            }
-
-            mergeByName(temp, 0, temp.size() - 1);
+            rollTree.traverse(temp);
+            sort(temp.begin(), temp.end(), [](const student& a, const student& b) {
+                return a.name < b.name;
+            });
 
             cout << "\nAll Student Records (Sorted by Name): \n";
             for (const auto &s : temp)
@@ -228,20 +216,16 @@ int main()
                 s.showdata();
                 cout << "\n--------------------------------------\n";
             }
-
             break;
         }
 
         case 7:
         {
-
             vector<student> temp;
-
-            for (int i = 0; i < students.size(); i++)
-            {
-                temp.push_back(students[i]);
-            }
-            mergeByCGPA(temp, 0, temp.size() - 1);
+            rollTree.traverse(temp);
+            sort(temp.begin(), temp.end(), [](const student& a, const student& b) {
+                return a.CGPA < b.CGPA;
+            });
 
             cout << "\nAll Student Records (Sorted by CGPA): \n";
             for (const auto &s : temp)
@@ -249,16 +233,13 @@ int main()
                 s.showdata();
                 cout << "\n--------------------------------------\n";
             }
-
             break;
         }
 
         case 8:
         {
-            vector<student> temp;
-
-            int targetRollNo;
-            cout << "Enter Target Roll NO" << endl;
+            long long targetRollNo;
+            cout << "Enter Target Roll NO\n";
             cin >> targetRollNo;
             if (cin.fail())
             {
@@ -268,25 +249,16 @@ int main()
                 continue;
             }
 
-            for (int i = 0; i < students.size(); i++)
-            {
-                temp.push_back(students[i]);
-            }
-
-            mergeByRollNo(temp, 0, temp.size() - 1);
-
-            int result = binarySearchByRollNo(temp, targetRollNo);
-
-            if (result != -1)
+            student* s = rollTree.search(targetRollNo);
+            if (s != nullptr)
             {
                 cout << "\nStudent found: ";
-                temp[result].showdata();
+                s->showdata();
             }
             else
             {
-                cout << "\nStudent with Roll No " << targetRollNo << " not found." << endl;
+                cout << "\nStudent with Roll No " << targetRollNo << " not found.\n";
             }
-
             break;
         }
 
@@ -298,8 +270,7 @@ int main()
 
         case 10:
         {
-
-            saveAllStudentsToFile(students, "students.dat");
+            saveAllStudentsToFile(rollTree, "students.dat");
             cout << "Exiting Program...\n";
             return 0;
         }

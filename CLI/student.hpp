@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include "btree.hpp"
 using namespace std;
 
 // Define Courses struct
@@ -32,20 +33,16 @@ public:
 
     student(); // intiliase
 
-    void getdata(const vector<student> &existingStudents);
+    void getdata(BTree<long long, student> &rollTree);
     void showdata() const;
     void Enter_courses(int n);
     double calculateCGPA();
 };
 
 unordered_map<string, Courses> courseCatalog();
-void updateStudentRecord(vector<student> &students, long long rollNo);
-void saveAllStudentsToFile(const vector<student> &students, const char *filename);
-void loadAllStudentsFromFile(vector<student> &students, const char *filename, multimap<string, student> &ByName);
-void mergeByRollNo(vector<student> &students, int left, int right);
-void mergeByCGPA(vector<student> &students, int left, int right);
-void mergeByName(vector<student> &students, int left, int right);
-int binarySearchByRollNo(const vector<student> &students, int targetRollNo);
+void updateStudentRecord(BTree<long long, student> &rollTree, long long rollNo);
+void saveAllStudentsToFile(BTree<long long, student> &rollTree, const char *filename);
+void loadAllStudentsFromFile(BTree<long long, student> &rollTree, const char *filename);
 void displayAllCourses();
 
 #endif
